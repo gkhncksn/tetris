@@ -1,6 +1,5 @@
 import tkinter
 from tkinter import Canvas, Label, Tk, StringVar, Button, Frame
-
 from random import choice
 from collections import Counter
 import time
@@ -10,24 +9,17 @@ class Game():
     HEIGHT = 500
 
     def start(self):
-        '''Starts the game.
-
-        Creates a window, a canvas, and a first shape. Binds the event handler.
-        Then starts a GUI timer of ms interval self.speed and starts the GUI main 
-        loop.
-
-        '''
         self.level = 1
         self.score = 0
         self.speed = 500
-        self.lines_cleared = 0  # Temizlenen satır sayısını takip et
+        self.lines_cleared = 0
         self.create_new_game = True
         self.paused = False
         self.game_over_state = False
 
         self.root = Tk()
         self.root.title("Tetris")
-        self.root.focus_set()  # Klavye odağını ayarla
+        self.root.focus_set()
 
         # Ana frame
         main_frame = Frame(self.root)
@@ -56,16 +48,14 @@ class Game():
                 bg='black')
         self.canvas.pack(side='left')
 
-        # Sağ panel - Next Shape
+        # Sağ panel - Sonraki Şekil
         right_panel = Frame(game_frame)
         right_panel.pack(side='right', padx=10, fill='y')
-
-        # Next shape label
         next_label = Label(right_panel, text="Sonraki Şekil:", 
                           font=("Helvetica", 10, "bold"))
         next_label.pack()
 
-        # Next shape preview canvas
+        # Sonraki Şekil Önizleme
         self.next_canvas = Canvas(right_panel, 
                                 width=100, height=100, 
                                 bg='black', relief='sunken', bd=2)
@@ -78,12 +68,11 @@ class Game():
                                    bg="lightblue")
         
         # Kontrollar etiketi
-        controls_text = "Kontroller: ← → ↓ ↑(döndür) P(durdur) R(yeniden)"
+        controls_text = "Kontroller: ← → ↓ ↑(Döndür) P(Pause) R(Restart)"
         self.controls_label = Label(main_frame, text=controls_text, 
                                   font=("Helvetica", 8))
         self.controls_label.pack()
 
-        # İlk next shape'i belirle
         self.next_shape_type = choice(Shape.SHAPES)
         self.draw_next_shape()
 
@@ -92,12 +81,6 @@ class Game():
         self.root.mainloop()
     
     def timer(self):
-        '''Every self.speed ms, attempt to cause the current_shape to fall().
-
-        If fall() returns False, create a new shape and check if it can fall.
-        If it can't, then the game is over.
-        
-        '''
         if self.game_over_state:
             return
             
@@ -143,12 +126,10 @@ class Game():
         self.root.after(self.speed, self.timer)
 
     def update_status(self):
-        '''Durum çubuğunu güncelle'''
         self.status_var.set("Level: %d, Score: %d, Lines: %d" % 
                 (self.level, self.score, self.lines_cleared))
 
     def handle_events(self, event):
-        '''Handle all user events.'''
         if event.keysym == "p" or event.keysym == "P":
             self.toggle_pause()
             return
@@ -171,7 +152,6 @@ class Game():
                 self.current_shape.rotate()
 
     def toggle_pause(self):
-        '''Oyunu durdur/devam ettir'''
         if self.game_over_state:
             return
         self.paused = not self.paused
@@ -181,14 +161,12 @@ class Game():
             self.clear_messages()
 
     def show_pause_message(self):
-        '''Durdurulma mesajı göster'''
         self.canvas.create_text(Game.WIDTH // 2, Game.HEIGHT // 2, 
                               text="OYUN DURDURULDU\nDevam etmek için P'ye basın",
                               fill="white", font=("Helvetica", 14, "bold"),
                               justify="center", tags="pause_message")
 
     def draw_next_shape(self):
-        '''Sonraki şeklin önizlemesini çiz'''
         self.next_canvas.delete("all")
         
         if not self.next_shape_type:
@@ -223,12 +201,10 @@ class Game():
             )
 
     def clear_messages(self):
-        '''Mesajları temizle'''
         self.canvas.delete("pause_message")
         self.canvas.delete("game_over_message")
 
     def restart_game(self):
-        '''Oyunu yeniden başlat'''
         self.canvas.delete("all")
         self.level = 1
         self.score = 0
@@ -245,11 +221,6 @@ class Game():
         self.timer()
 
     def is_game_over(self):
-        '''Check if a newly created shape is able to fall.
-
-        If it can't fall, then the game is over.
-
-        '''
         if not hasattr(self.current_shape, 'boxes') or not self.current_shape.boxes:
             return False
             
@@ -264,20 +235,18 @@ class Game():
         if not all_boxes:
             return 0
 
-        # Her y koordinatındaki kutuları grupla
         rows = {}
         box_coords = {}
         
         for box in all_boxes:
             coords = self.canvas.coords(box)
-            if len(coords) == 4:  # Geçerli koordinatlar
-                y = int(coords[1])  # Top y koordinatı
+            if len(coords) == 4:  
+                y = int(coords[1])  
                 box_coords[box] = coords
                 if y not in rows:
                     rows[y] = []
                 rows[y].append(box)
 
-        # Tamamlanmış satırları bul (genişlik / kutu boyutu kadar kutu içeren)
         complete_lines = []
         boxes_per_row = Game.WIDTH // Shape.BOX_SIZE
         
@@ -362,10 +331,7 @@ class Game():
             pass
 
     def game_over(self):
-        '''Oyun bitti mesajı canvas'ta göster'''
         self.game_over_state = True
-        
-        # Game over mesajını canvas'ta göster
         game_over_text = f"OYUN BİTTİ!\n\nSkor: {self.score}\nSeviye: {self.level}\nTemizlenen Satır: {self.lines_cleared}\n\nYeniden oynamak için R'ye basın"
         
         # Yarı şeffaf arka plan
@@ -399,18 +365,6 @@ class Shape:
             )
 
     def __init__(self, canvas, shape_type=None):
-        '''Create a shape.
-
-        Select a random shape from the SHAPES tuple or use provided shape_type. 
-        Then, for each point in the shape definition given in the SHAPES tuple, 
-        create a rectangle of size BOX_SIZE. Save the integer references to these 
-        rectangles in the self.boxes list.
-
-        Args:
-        canvas - the parent canvas on which the shape appears
-        shape_type - optional shape type, if None a random shape is chosen
-
-        '''
         self.boxes = [] # the squares drawn by canvas.create_rectangle()
         self.shape = shape_type if shape_type else choice(Shape.SHAPES) # a random shape or provided shape
         self.color = self.shape[0]
@@ -425,8 +379,7 @@ class Shape:
                 fill=self.color,
                 outline='white')
             self.boxes.append(box)
-
-           
+      
     def move(self, x, y):
         '''Moves this shape (x, y) boxes.'''
         if not self.can_move_shape(x, y): 
